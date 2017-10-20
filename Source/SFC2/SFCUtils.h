@@ -17,7 +17,7 @@
 								if ((expr)) { \
 								} \
 								else { \
-										UE_LOG(LogTemp, Fatal, TEXT("Expression (" #expr ") is false:" ## msg)); \
+										UE_LOG(LogTemp, Fatal, TEXT("Expression (" #expr ") is false: " msg)); \
 								} \
 						    } while (false);
 
