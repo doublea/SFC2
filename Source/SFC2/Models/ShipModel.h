@@ -29,7 +29,7 @@ enum class EWeaponMode : uint8 {
     WM_Normal,
     WM_Photon_Normal,
     WM_Photon_Overload,
-    WM_Photon_Proxymity,
+    WM_Photon_Proximity,
 };
 
 USTRUCT(BlueprintType)

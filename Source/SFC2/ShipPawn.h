@@ -22,13 +22,20 @@ class AShipPawn : public APawn
     class UStaticMeshComponent* ShipMesh;
 
 	UPROPERTY(Category = Camera, VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UTurnIndicatorComponent* TurnIndicator;
+    class UTurnIndicatorComponent* TurnIndicator;
 
 	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-		class UTargetComponent* TargetComponent;
+    class UTargetComponent* TargetComponent;
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-        class UWeaponEmitterComponent* WeaponEmitterComponent;
+    class UWeaponsManagerComponent* WeaponsManagerComponent;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    class UParticleSystemComponent* ShieldParticleSystem;
+
+    // Shield magic
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    class UShieldComponent* ShieldComponent;
 
 public:
 	AShipPawn();
@@ -40,7 +47,8 @@ public:
 	void SetSpeedFraction(float speedFraction);
 	void SpeedUp();
 	void SpeedDown();
-    void FireAtTarget(AActor* target);
+    void FireAll(AActor* Target);
+    // TODO: void FireWeapon(int WeaponIdx, AActor* target);
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FShipModel ShipModel;
@@ -50,7 +58,11 @@ public:
     UFUNCTION(BlueprintCallable)
     bool IsDead() const { return ShipModel.Hull.Damage.IsDestroyed(); }
 
-public:
+    UFUNCTION()
+    virtual float TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
+
 	/** Returns PlaneMesh subobject **/
 	FORCEINLINE class UStaticMeshComponent* GetShipMesh() const { return ShipMesh; }
+
+private:
 };

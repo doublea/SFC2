@@ -4,7 +4,7 @@
 #include "Runtime/Engine/Classes/GameFramework/SpringArmComponent.h"
 #include "Runtime/Engine/Classes/Camera/CameraComponent.h"
 
-static const float kSFCCameraTilt = -0.20f;
+static const float kSFCCameraTilt = -20.0f;
 
 ASFCPlayerCameraManager::ASFCPlayerCameraManager() {
     SpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraSpringArm"));
@@ -30,7 +30,6 @@ ASFCPlayerCameraManager::ASFCPlayerCameraManager() {
 }
 
 void ASFCPlayerCameraManager::SetAttachedActor(AActor* Actor) {
-    AttachedActor = Actor;
     SpringArm->AttachToComponent(
         Actor->GetRootComponent(), FAttachmentTransformRules::KeepRelativeTransform);
 }
@@ -40,7 +39,7 @@ void ASFCPlayerCameraManager::UpdateViewTarget(FTViewTarget& OutVT, float DeltaT
         // We want to keep the AttachedActor in view, so we need to rotate the
         // SpringArm so that SpringArm -> AttachedActor and Target are all
         // aligned.
-        FRotator ToTarget = (TargetActor->GetActorLocation() - AttachedActor->GetActorLocation()).ToOrientationRotator();
+        FRotator ToTarget = (TargetActor->GetActorLocation() - Camera->GetComponentLocation()).ToOrientationRotator();
         ToTarget.Normalize();
         FRotator SpringArmRotation;
         SpringArmRotation.Pitch = kSFCCameraTilt;

@@ -7,12 +7,14 @@
 #include "Runtime/Engine/Classes/Components/ArrowComponent.h"
 #include "Engine/World.h"
 #include "Engine/StaticMesh.h"
-#include "Runtime/Engine/Classes/Materials/MaterialInstanceDynamic.h"
-#include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
 #include "TurnIndicatorComponent.h"
 #include "Targeting/TargetComponent.h"
-#include "Weapons/WeaponEmitterComponent.h"
+#include "Weapons/WeaponsManagerComponent.h"
+#include "Weapons/PhaserEmitterComponent.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
+#include "Models/DamageTypes.h"
 #include "SFCUtils.h"
+#include "ShieldComponent.h"
 #include <algorithm>
 
 AShipPawn::AShipPawn()
@@ -24,9 +26,9 @@ AShipPawn::AShipPawn()
 	{
 		ConstructorHelpers::FObjectFinderOptional<UStaticMesh> ShipMesh;
 		ConstructorHelpers::FObjectFinderOptional<UMaterialInterface> UFOMaterial;
-		FConstructorStatics()
-			: ShipMesh(TEXT("/Game/Meshes/UFO.UFO")),
-			  UFOMaterial(TEXT("/Game/Materials/UFOMaterial")) {}
+        FConstructorStatics()
+            : ShipMesh(TEXT("/Game/Meshes/UFO.UFO")),
+              UFOMaterial(TEXT("/Game/Materials/UFOMaterial")) {}
 	};
 	static FConstructorStatics ConstructorStatics;
 
@@ -51,9 +53,12 @@ AShipPawn::AShipPawn()
 	TargetComponent = CreateDefaultSubobject<UTargetComponent>(TEXT("Target"));
     TargetComponent->MouseOverComponent = ShipMesh;
 
-    WeaponEmitterComponent = CreateDefaultSubobject<UWeaponEmitterComponent>(TEXT("WeaponsEmitter"));
-    WeaponEmitterComponent->Mesh = ShipMesh;
-    WeaponEmitterComponent->WeaponsArray = ShipModel.Weapons;
+    WeaponsManagerComponent = CreateDefaultSubobject<UWeaponsManagerComponent>(TEXT("WeaponsEmitter"));
+    WeaponsManagerComponent->Mesh = ShipMesh;
+    WeaponsManagerComponent->WeaponModels = &ShipModel.Weapons;
+
+    ShieldComponent = CreateDefaultSubobject<UShieldComponent>(TEXT("Shield"));
+    ShieldComponent->SetupAttachment(RootComponent);
 }
 
 void AShipPawn::BeginPlay() {
@@ -70,6 +75,27 @@ void AShipPawn::BeginPlay() {
         ShipMesh->SetWorldRotation(GetActorRotation());
         ShipMesh->SetVisibility(true);
     }
+}
+
+float AShipPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) {
+    // This crashes :(
+    // const USFCDamageType* SFCDamageType = Cast<USFCDamageType>(DamageType);
+    UObject* DamageTypeUObj = DamageEvent.DamageTypeClass->GetDefaultObject();
+    DEBUGMSG_FSTRING(DamageEvent.DamageTypeClass->GetName());
+    USFCDamageType* DamageType = Cast<USFCDamageType>(DamageTypeUObj);
+    if (DamageType == nullptr) {
+        return 0.0f;
+    }
+    float ActualDamage = DamageType->GetDamageAtDistance(DamageAmount, FVector::Dist(GetActorLocation(), DamageCauser->GetActorLocation()));
+    FString msg("Took ");
+    FString dmg_str = msg.SanitizeFloat(ActualDamage);
+    msg.Append(dmg_str + " damage!");
+    DEBUGMSG_FSTRING(msg);
+
+    // Shield Magic!
+    FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
+    ShieldComponent->ShieldCollision(PointDamageEvent->HitInfo);
+    return Super::TakeDamage(ActualDamage, DamageEvent, EventInstigator, DamageCauser);
 }
 
 float AShipPawn::GetCurrentTurnRate()
@@ -93,8 +119,10 @@ void AShipPawn::SpeedDown() {
         0.0f, ShipModel.Movement.CurrentSpeed - ShipModel.Movement.MaxSpeed / 20.0f);
 }
 
-void AShipPawn::FireAtTarget(AActor* target) {
-    WeaponEmitterComponent->FireAtTarget(target);
+void AShipPawn::FireAll(AActor* target) {
+    for (int i = 0; i < ShipModel.Weapons.Num(); i++) {
+        WeaponsManagerComponent->FireWeapon(i, target);
+    }
 }
 
 FVector SpeedToLocalMove(float CurrentSpeed, float DeltaSeconds) {

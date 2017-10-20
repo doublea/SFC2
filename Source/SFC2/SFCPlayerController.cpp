@@ -10,6 +10,7 @@
 #include "Camera/SFCPlayerCameraManager.h"
 #include "ShipPawn.h"
 #include "Targeting/TargetManager.h"
+#include "Components/PrimitiveComponent.h"
 #include "SFCUtils.h"
 
 ASFCPlayerController::ASFCPlayerController() {
@@ -84,6 +85,13 @@ void ASFCPlayerController::LeftClickPressed() {
 		GetHitResultUnderCursor(ECC_WorldStatic, false, Hit);  // ECC_WorldStatic hits the invisible plane
 
 		if (Hit.bBlockingHit) {
+            if (Hit.GetActor() != nullptr) {
+                FString msg = FString(TEXT("Clicked on actor: ")) + Hit.Actor->GetName();
+                if (Hit.GetComponent() != nullptr) {
+                    msg += TEXT(". Component: ") + Hit.GetComponent()->GetName();
+                }
+                DEBUGMSG_FSTRING(msg);
+            }
 			FVector src = MyPawn->GetActorLocation();
 			FVector dst = Hit.ImpactPoint;
 			FVector direction(FVector(dst.X, dst.Y, 0) - FVector(src.X, src.Y, 0));
@@ -116,7 +124,7 @@ void ASFCPlayerController::SpeedDown() {
 	GetCurrentShip()->SpeedDown();
 }
 
-void ASFCPlayerController::FireSelected() {
+void ASFCPlayerController::FireAll() {
     AActor* target = TargetManager->GetCurrentTarget();
     if (target == nullptr) {
         DEBUGMSG("No target selected!");
@@ -124,11 +132,12 @@ void ASFCPlayerController::FireSelected() {
     }
     DEBUGMSG("Firing!");
     AShipPawn* ship = GetCurrentShip();
-    ship->FireAtTarget(target);
+    ship->FireAll(target);
 }
 
-void ASFCPlayerController::FireAll() {
+void ASFCPlayerController::FireSelected() {
     // TODO
+    FireAll();
 }
 
 

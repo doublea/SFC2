@@ -42,8 +42,5 @@ protected:
     class UCameraComponent* Camera;
 
     UPROPERTY()
-    class AActor* AttachedActor;
-
-    UPROPERTY()
     class AActor* TargetActor;
 };

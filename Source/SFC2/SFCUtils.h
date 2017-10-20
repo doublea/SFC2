@@ -20,3 +20,5 @@
 										UE_LOG(LogTemp, Fatal, TEXT("Expression (" #expr ") is false:" ## msg)); \
 								} \
 						    } while (false);
+
+#define ECC_SFCWeaponTraceChannel ECC_GameTraceChannel2

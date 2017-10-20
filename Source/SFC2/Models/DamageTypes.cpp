@@ -2,10 +2,6 @@
 
 #include "DamageTypes.h"
 
-DamageTypes::DamageTypes()
-{
-}
-
-DamageTypes::~DamageTypes()
-{
+USFCDamageType::USFCDamageType() {
+    DamageFalloff = 1.0f;
 }

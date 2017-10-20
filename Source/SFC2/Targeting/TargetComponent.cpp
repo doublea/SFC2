@@ -73,6 +73,7 @@ void UTargetComponent::BeginPlay() {
             MouseOverComponent != nullptr,
             "TargetComponent: MouseOverComponent not set, and actor does not have a UPrimitiveComponent root component.");
     }
+
 	DEBUGMSG_FSTRING(GetOwner()->GetName());
 	FScriptDelegate beginCursorOverDelegate;
 	beginCursorOverDelegate.BindUFunction(this, "OnBeginCursorOver");

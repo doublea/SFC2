@@ -2,6 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+#include "Weapons/WeaponEmitterComponent.h"
+#include <vector>
 #include "WeaponsManagerComponent.generated.h"
 
 
@@ -14,19 +16,26 @@
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class SFC2_API UWeaponsManagerComponent : public UActorComponent
 {
-	GENERATED_BODY()
+    GENERATED_BODY()
 
-public:	
-	// Sets default values for this component's properties
-	UWeaponsManagerComponent();
+public:
+    // Sets default values for this component's properties
+    UWeaponsManagerComponent();
+
+    TArray<FWeaponModel>* WeaponModels;
+
+    std::vector<UWeaponEmitterComponent*> WeaponEmitters = {};
+
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+    class UStaticMeshComponent* Mesh;
+
+    UFUNCTION(BlueprintCallable)
+    bool FireWeapon(int WeaponIdx, AActor* Target);
 
 protected:
 	// Called when the game starts
+	virtual void InitializeComponent() override;
 	virtual void BeginPlay() override;
-
-public:	
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 private:
     class AShipPawn* Ship;
