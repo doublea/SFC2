@@ -13,17 +13,9 @@ class SFC2_API UShieldComponent : public USceneComponent
     GENERATED_BODY()
 
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    class UParticleSystemComponent* ShieldParticleSystem;
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     class UStaticMeshComponent* ShieldMesh;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-    class UMaterial* ShieldMaterial;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UMaterialInstanceDynamic* ShieldMaterialInstance;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-    class UMaterial* ImpactPointMaterial;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UMaterialInstanceDynamic* ImpactPointMaterialInstance;
-	UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-    class UTextureRenderTarget2D* RenderTarget;
 
 public:	
 	// Sets default values for this component's properties
@@ -32,13 +24,7 @@ public:
     UFUNCTION()
     void ShieldCollision(const FHitResult& HitInfo);
 
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
-
-private:	
-    float ImpactStartedAt = 0.0f;
 };

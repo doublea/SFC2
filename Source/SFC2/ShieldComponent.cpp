@@ -9,35 +9,34 @@
 #include "Runtime/Engine/Classes/Engine/TextureRenderTarget2D.h"
 #include "Runtime/Engine/Classes/Engine/World.h"
 #include "Runtime/Engine/Classes/Kismet/GameplayStatics.h"
+#include "Runtime/Engine/Classes/Particles/ParticleSystemComponent.h"
 #include "Runtime/Engine/Public/TimerManager.h"
+#include "Runtime/Engine/Public/DrawDebugHelpers.h"
 #include "SFCUtils.h"
 
 
 // Sets default values for this component's properties
 UShieldComponent::UShieldComponent()
 {
-	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
-	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 
     struct FConstructorStatics {
-		ConstructorHelpers::FObjectFinderOptional<UStaticMesh> ShieldMesh;
-        ConstructorHelpers::FObjectFinder<UMaterial> ShieldMaterial;
-        ConstructorHelpers::FObjectFinder<UMaterial> ImpactPointMaterial;
+		ConstructorHelpers::FObjectFinder<UStaticMesh> ShieldMesh;
+        ConstructorHelpers::FObjectFinder<UParticleSystem> ShieldParticle;
 		FConstructorStatics()
             : ShieldMesh(TEXT("/Game/Meshes/Shape_Sphere")),
-              ShieldMaterial(TEXT("/Game/Materials/M_Shield2")),
-              ImpactPointMaterial(TEXT("/Game/Materials/M_ImpactPoint")) {}
+              ShieldParticle(TEXT("/Game/Particles/P_Shield")) {}
 	};
 	static FConstructorStatics ConstructorStatics;
 
     ShieldMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShieldMesh"));
     if (ConstructorStatics.ShieldMesh.Succeeded()) {
-        ShieldMesh->SetStaticMesh(ConstructorStatics.ShieldMesh.Get());
+        ShieldMesh->SetStaticMesh(ConstructorStatics.ShieldMesh.Object);
     }
     ShieldMesh->SetVisibility(false);
-    ShieldMaterial = ConstructorStatics.ShieldMaterial.Object;
-    ImpactPointMaterial = ConstructorStatics.ImpactPointMaterial.Object;
+
+    ShieldParticleSystem = CreateDefaultSubobject<UParticleSystemComponent>(TEXT("ShieldParticle"));
+    ShieldParticleSystem->Template = ConstructorStatics.ShieldParticle.Object;
 }
 
 
@@ -48,55 +47,22 @@ void UShieldComponent::BeginPlay()
 
     ShieldMesh->AttachToComponent(GetOwner()->GetRootComponent(), FAttachmentTransformRules::SnapToTargetIncludingScale);
     ShieldMesh->SetWorldLocation(GetOwner()->GetActorLocation());
-
+    ShieldMesh->SetWorldRotation(GetOwner()->GetActorRotation());
     ShieldMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     ShieldMesh->SetCollisionResponseToChannel(ECC_SFCWeaponTraceChannel, ECollisionResponse::ECR_Block);
     ShieldMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
     ShieldMesh->bGenerateOverlapEvents = false;
 
-    RenderTarget = UKismetRenderingLibrary::CreateRenderTarget2D(GetOwner(), 1024, 1024);
-    UKismetRenderingLibrary::ClearRenderTarget2D(GetOwner(), RenderTarget);
-    ShieldMaterialInstance = UMaterialInstanceDynamic::Create(ShieldMaterial, this);
-    ShieldMaterialInstance->SetTextureParameterValue(TEXT("ImpactTexture"), RenderTarget);
-    // This line sometimes crashes? WTF?
-    ShieldMesh->SetMaterial(0, ShieldMaterialInstance);
-    ImpactPointMaterialInstance = UMaterialInstanceDynamic::Create(ImpactPointMaterial, this);
+    ShieldParticleSystem->AttachToComponent(ShieldMesh, FAttachmentTransformRules::SnapToTargetIncludingScale);
+    ShieldParticleSystem->SetWorldLocation(GetOwner()->GetActorLocation());
 }
 
 void UShieldComponent::ShieldCollision(const FHitResult& HitInfo) {
-    FVector2D CollisionUV;
-    if (HitInfo.GetComponent() != nullptr) {
-        DEBUGMSG("Hit component!");
-        DEBUGMSG_FSTRING(HitInfo.GetComponent()->GetFullName());
-        DEBUGMSG_FSTRING(FString::FromInt(HitInfo.FaceIndex));
-    }
-    if (UGameplayStatics::FindCollisionUV(HitInfo, 0, CollisionUV)) {
-        DEBUGMSG_FSTRING(TEXT("Found Collision UV! ") + CollisionUV.ToString());
-    }
-    else {
-        DEBUGMSG("Failed to find Collision UV.");
-    }
-    ImpactPointMaterialInstance->SetVectorParameterValue(
-        TEXT("ForcePosition"), UKismetMathLibrary::Conv_Vector2DToVector(CollisionUV));
-    //UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetOwner(), RenderTarget, ImpactPointMaterialInstance);
-    ImpactStartedAt = GetWorld()->GetUnpausedTimeSeconds();
-    ShieldMesh->SetVisibility(true);
-}
-
-// Called every frame
-void UShieldComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-    float AnimTime = GetWorld()->GetUnpausedTimeSeconds() - ImpactStartedAt;
-    if (AnimTime <= 0.25f) {
-        ImpactPointMaterialInstance->SetScalarParameterValue(TEXT("Time"), AnimTime);
-        UKismetRenderingLibrary::DrawMaterialToRenderTarget(GetOwner(), RenderTarget, ImpactPointMaterialInstance);
-    } else if (ImpactStartedAt != 0.0f) {
-        UKismetRenderingLibrary::ClearRenderTarget2D(GetOwner(), RenderTarget);
-        ImpactStartedAt = 0.0f;
-        ShieldMesh->SetVisibility(false);
-    }
-	// ...
+    FRotator ShieldRot = UKismetMathLibrary::FindLookAtRotation(
+           ShieldParticleSystem->GetComponentLocation(), HitInfo.ImpactPoint);
+    // TODO: Can we put the hit direction in the event and spawn a particle with the correct rotation?
+    ShieldParticleSystem->SetVectorParameter(TEXT("ParticleRotation"), FVector(0.0f, 0.0f, (90.0f + ShieldRot.Yaw) / 360.0f));
+    ShieldParticleSystem->GenerateParticleEvent(TEXT("ShieldHit"), 0.0f, FVector::ZeroVector, FVector::ZeroVector, FVector::ZeroVector);
+    ShieldParticleSystem->ActivateSystem();
 }
 
