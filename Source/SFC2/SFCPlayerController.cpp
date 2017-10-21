@@ -85,13 +85,6 @@ void ASFCPlayerController::LeftClickPressed() {
 		GetHitResultUnderCursor(ECC_WorldStatic, false, Hit);  // ECC_WorldStatic hits the invisible plane
 
 		if (Hit.bBlockingHit) {
-            if (Hit.GetActor() != nullptr) {
-                FString msg = FString(TEXT("Clicked on actor: ")) + Hit.Actor->GetName();
-                if (Hit.GetComponent() != nullptr) {
-                    msg += TEXT(". Component: ") + Hit.GetComponent()->GetName();
-                }
-                DEBUGMSG_FSTRING(msg);
-            }
 			FVector src = MyPawn->GetActorLocation();
 			FVector dst = Hit.ImpactPoint;
 			FVector direction(FVector(dst.X, dst.Y, 0) - FVector(src.X, src.Y, 0));
@@ -148,7 +141,7 @@ void ASFCPlayerController::FireSelected() {
 #if WITH_EDITOR
 /* Get Screen Percentage */
 static const auto CVarScreenPercentage = IConsoleManager::Get().FindTConsoleVariableDataFloat(TEXT("r.SCreenPercentage"));
-#endif
+#endif  // WITH_EDITOR
 
 float ASFCPlayerController::GetObjectScreenRadius(AActor* InActor)
 {
@@ -162,7 +155,7 @@ float ASFCPlayerController::GetObjectScreenRadius(AActor* InActor)
 	float CamFOV = PlayerCameraManager->GetFOVAngle();
 #if WITH_EDITOR
 	float ScreenPerc = CVarScreenPercentage->GetValueOnGameThread() / 100.0f;
-#endif
+#endif  // WITH_EDITOR
 
 	/* Get the size of the viewport, and the player cameras location. */
 	GetViewportSize(Width, Height);
@@ -172,7 +165,7 @@ float ASFCPlayerController::GetObjectScreenRadius(AActor* InActor)
 	/* Factor in Screen Percentage & Quality Settings */
 	Width *= ScreenPerc;
 	Height *= ScreenPerc;
-#endif
+#endif  // WITH_EDITOR
 
 	/* Easy Way To Return The Size, Create a vector and scale it. Alternative would be to use FMath::Max3 */
 	float SRad = FVector2D(Width, Height).Size();

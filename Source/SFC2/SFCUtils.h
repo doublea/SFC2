@@ -2,13 +2,13 @@
 
 #define DEBUGMSG_FSTRING(STR) do { \
                                 if (GEngine && GEngine->IsEditor()) \
-                                  GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, (STR)); \
+                                  GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, (STR)); \
                               } while (false)
 
 #define DEBUGMSG(TXT) do { \
                         if (GEngine && GEngine->IsEditor()) { \
                           static const FString __ScrollingMessage(TEXT(TXT)); \
-                          GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Red, __ScrollingMessage); \
+                          GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Red, __ScrollingMessage); \
                         } \
                       } while (false)
 

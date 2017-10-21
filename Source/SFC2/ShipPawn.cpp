@@ -81,16 +81,11 @@ float AShipPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
     // This crashes :(
     // const USFCDamageType* SFCDamageType = Cast<USFCDamageType>(DamageType);
     UObject* DamageTypeUObj = DamageEvent.DamageTypeClass->GetDefaultObject();
-    DEBUGMSG_FSTRING(DamageEvent.DamageTypeClass->GetName());
     USFCDamageType* DamageType = Cast<USFCDamageType>(DamageTypeUObj);
     if (DamageType == nullptr) {
         return 0.0f;
     }
     float ActualDamage = DamageType->GetDamageAtDistance(DamageAmount, FVector::Dist(GetActorLocation(), DamageCauser->GetActorLocation()));
-    FString msg("Took ");
-    FString dmg_str = msg.SanitizeFloat(ActualDamage);
-    msg.Append(dmg_str + " damage!");
-    DEBUGMSG_FSTRING(msg);
 
     // Shield Magic!
     FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
