@@ -50,19 +50,31 @@ void UShieldComponent::BeginPlay()
     ShieldMesh->SetWorldRotation(GetOwner()->GetActorRotation());
     ShieldMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     ShieldMesh->SetCollisionResponseToChannel(ECC_SFCWeaponTraceChannel, ECollisionResponse::ECR_Block);
-    ShieldMesh->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-    ShieldMesh->bGenerateOverlapEvents = false;
+    ShieldMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+    ShieldMesh->bGenerateOverlapEvents = true;
 
     ShieldParticleSystem->AttachToComponent(ShieldMesh, FAttachmentTransformRules::SnapToTargetIncludingScale);
     ShieldParticleSystem->SetWorldLocation(GetOwner()->GetActorLocation());
 }
 
-void UShieldComponent::ShieldCollision(const FHitResult& HitInfo) {
-    FRotator ShieldRot = UKismetMathLibrary::FindLookAtRotation(
-           ShieldParticleSystem->GetComponentLocation(), HitInfo.ImpactPoint);
+void UShieldComponent::ShieldCollision(const FVector& HitDirection) {
+    //FRotator ShieldRot = UKismetMathLibrary::FindLookAtRotation(
+    //       ShieldParticleSystem->GetComponentLocation(), HitInfo.ImpactPoint);
     // TODO: Can we put the hit direction in the event and spawn a particle with the correct rotation?
-    ShieldParticleSystem->SetVectorParameter(TEXT("ParticleRotation"), FVector(0.0f, 0.0f, (90.0f + ShieldRot.Yaw) / 360.0f));
-    ShieldParticleSystem->GenerateParticleEvent(TEXT("ShieldHit"), 0.0f, FVector::ZeroVector, FVector::ZeroVector, FVector::ZeroVector);
+    ShieldParticleSystem->SetVectorParameter(
+        TEXT("ParticleRotation"),
+        FVector(0.f, 0.f, (90.0f + HitDirection.Rotation().Yaw) / 360.0f));
+    ShieldParticleSystem->GenerateParticleEvent(
+        TEXT("ShieldHit"), 0.0f, FVector::ZeroVector, FVector::ZeroVector,
+        FVector::ZeroVector);
     ShieldParticleSystem->ActivateSystem();
 }
 
+float UShieldComponent::ConsumePower(uint8 Priorioty, float AvailablePower, float TurnFraction) {
+    // FIXME
+    return 0.0f;
+}
+
+std::vector<ISFCPowerConsumer*> UShieldComponent::GetPowerConsumers() {
+    return { this };
+}

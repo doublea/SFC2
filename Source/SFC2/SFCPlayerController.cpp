@@ -11,6 +11,7 @@
 #include "ShipPawn.h"
 #include "Targeting/TargetManager.h"
 #include "Components/PrimitiveComponent.h"
+#include "Runtime/UMG/Public/Components/GridPanel.h"
 #include "SFCUtils.h"
 
 ASFCPlayerController::ASFCPlayerController() {
@@ -54,11 +55,14 @@ void ASFCPlayerController::Possess(APawn* InPawn) {
 	if (HUDClass == nullptr) {
 		return;
 	}
-	if (HUDWidget == nullptr) {
-		HUDWidget = CreateWidget<UUserWidget>(this, HUDClass);
-        CHECK(HUDWidget != nullptr);
-        HUDWidget->AddToViewport();
-	}
+    if (HUDWidget != nullptr) {
+        HUDWidget->RemoveFromViewport();
+        HUDWidget = nullptr;
+    }
+    HUDWidget = CreateWidget<UUserWidget>(this, HUDClass);
+    CHECK(HUDWidget != nullptr);
+    HUDWidget->AddToViewport();
+
     ASFCPlayerCameraManager* CameraManager = Cast<ASFCPlayerCameraManager>(PlayerCameraManager);
     CameraManager->SetAttachedActor(InPawn);
 }

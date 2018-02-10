@@ -2,6 +2,7 @@
 
 #include "SFC2GameModeBase.h"
 #include "SFCPlayerController.h"
+#include "SFCGameState.h"
 #include "ShipPawn.h"
 
 ASFC2GameModeBase::ASFC2GameModeBase()
@@ -10,6 +11,8 @@ ASFC2GameModeBase::ASFC2GameModeBase()
 	DefaultPawnClass = AShipPawn::StaticClass();
 
 	PlayerControllerClass = ASFCPlayerController::StaticClass();
+
+    GameStateClass = ASFCGameState::StaticClass();
 }
 
 

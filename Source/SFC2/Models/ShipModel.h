@@ -3,7 +3,53 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <algorithm>
 #include "ShipModel.generated.h"
+
+USTRUCT(BlueprintType)
+struct FSystemCharge {
+    GENERATED_BODY()
+
+public:
+    // Current accumulated charge.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float CurrentCharge = 0.0f;
+
+    // Max accumulated charge.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float MaxCharge = 1.0f;
+
+    // System power draw per turn when fully charged.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ChargedPowerDraw = 1.0f;
+
+    // System power draw per turn when charging.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float ChargingPowerDraw = 1.0f;
+
+    // If available power is less than power draw, how much to discharge per turn.
+    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    float DischargeRate = 0.5f;
+
+    bool IsCharged() const { return CurrentCharge >= MaxCharge; }
+
+    float GetChargeFraction() const { return CurrentCharge / MaxCharge; }
+
+    void Discharge() { CurrentCharge = 0.0f; }
+
+    /** Attempts to charge the system given some amount of power. 
+     *  The returned value is the amount of power consumed.
+     **/
+    float AddCharge(float AvailablePower, float TurnFraction) {
+        float RequiredPower = (IsCharged() ? ChargedPowerDraw : ChargingPowerDraw) * TurnFraction;
+        if (AvailablePower >= RequiredPower) {
+            CurrentCharge = std::min(CurrentCharge + RequiredPower, MaxCharge);
+            return RequiredPower;
+        }
+        CurrentCharge = std::max(0.0f, CurrentCharge - DischargeRate * TurnFraction);
+        return 0.0f;
+    }
+};
 
 USTRUCT(BlueprintType)
 struct FSystemDamage {
@@ -20,6 +66,7 @@ struct FSystemDamage {
 
 UENUM(BlueprintType)
 enum class EWeaponType : uint8 {
+    WT_Unknown,
     WT_Phaser,
     WT_Photon,
 };
@@ -50,18 +97,12 @@ struct FWeaponModel {
     FSystemDamage Damage;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int Charge;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int MaxCharge;
+    FSystemCharge Charge;
 };
 
 USTRUCT(BlueprintType)
 struct FMovementModel {
     GENERATED_BODY()
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float CurrentSpeed;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     float MaxSpeed;
@@ -82,9 +123,6 @@ struct FPowerSystemModel {
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     int MaxPower;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    int CurrentPower;
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite)
     FSystemDamage Damage;

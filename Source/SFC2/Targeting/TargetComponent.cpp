@@ -55,7 +55,6 @@ void UTargetComponent::BeginPlay() {
 		WidgetComponent->SetWidget(ReticleWidget);
 		WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
         DeactivateComponent(WidgetComponent);
-		DEBUGMSG("Created widget component");
 	}
 
 	if (WidgetComponent != nullptr) {
@@ -74,7 +73,6 @@ void UTargetComponent::BeginPlay() {
             "TargetComponent: MouseOverComponent not set, and actor does not have a UPrimitiveComponent root component.");
     }
 
-	DEBUGMSG_FSTRING(GetOwner()->GetName());
 	FScriptDelegate beginCursorOverDelegate;
 	beginCursorOverDelegate.BindUFunction(this, "OnBeginCursorOver");
 	MouseOverComponent->OnBeginCursorOver.Add(beginCursorOverDelegate);
@@ -91,13 +89,9 @@ void UTargetComponent::BeginPlay() {
 	targetManager->OnTargetSelected().AddLambda([this, targetManager] (AActor* target) {
 		if (target == GetOwner()) {
             if (!targetManager->NewTargetAcquired(GetOwner())) return;
-			const static FString msg = FString(TEXT("New target is "));
-			DEBUGMSG_FSTRING(msg + GetOwner()->GetName());
 			isTarget = true;
             ActivateComponent(WidgetComponent);
 		} else if (isTarget) {
-			const static FString msg = FString(TEXT("Old target was "));
-			DEBUGMSG_FSTRING(msg + GetOwner()->GetName());
 			isTarget = false;
             DeactivateComponent(WidgetComponent);
 		}
@@ -107,15 +101,11 @@ void UTargetComponent::BeginPlay() {
 
 void UTargetComponent::OnBeginCursorOver(UPrimitiveComponent* touchedComponent) {
 	if (isTarget) return;
-	static const FString msg = FString(TEXT("OnBeginCursorOver for "));
-	DEBUGMSG_FSTRING(msg + GetOwner()->GetName());
     ActivateComponent(WidgetComponent);
 }
 
 void UTargetComponent::OnEndCursorOver(UPrimitiveComponent* touchedComponent) {
 	if (isTarget) return;
-	static const FString msg = FString(TEXT("OnEndCursorOver for "));
-	DEBUGMSG_FSTRING(msg + GetOwner()->GetName());
     DeactivateComponent(WidgetComponent);
 }
 

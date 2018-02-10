@@ -33,17 +33,23 @@ class AShipPawn : public APawn
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     class UParticleSystemComponent* ShieldParticleSystem;
 
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    class UShipPowerComponent* ShipPowerComponent;
+
     // Shield magic
     UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
     class UShieldComponent* ShieldComponent;
+
+    UPROPERTY(VisibleDefaultsOnly, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+    class UShipMovementComponent* MovementComponent;
 
 public:
 	AShipPawn();
 	// Begin AActor overrides
 	virtual void Tick(float DeltaSeconds) override;
     virtual void BeginPlay() override;
-
 	// End AActor overrides
+
 	void SetSpeedFraction(float speedFraction);
 	void SpeedUp();
 	void SpeedDown();

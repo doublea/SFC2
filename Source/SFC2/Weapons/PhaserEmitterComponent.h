@@ -18,11 +18,18 @@ public:
 
     UPROPERTY()
     class UParticleSystemComponent* PhaserParticleSystem;
+    UPROPERTY()
+    class UParticleSystem* PhaserParticle;
 
     UFUNCTION(BlueprintCallable)
-    virtual bool FireAtTarget(AActor* Target) override;
+    virtual bool FireAtTarget(FWeaponModel WeaponState, AActor* Target) override;
 
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
+
+    virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+private:
+    AActor* CurrentTarget;
 };

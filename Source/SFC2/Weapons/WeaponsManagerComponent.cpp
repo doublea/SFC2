@@ -2,9 +2,19 @@
 
 #include "WeaponsManagerComponent.h"
 #include "PhaserEmitterComponent.h"
+#include "PhotonEmitterComponent.h"
 #include "ShipPawn.h"
 #include "SFCUtils.h"
 
+WeaponState::WeaponState(EWeaponType WeaponType, FSystemCharge SystemCharge, FSystemDamage SystemDamage) :
+    Type(WeaponType), Charge(SystemCharge), PowerPriority(PRIORITY_LOADING_WEAPONS), Damage(SystemDamage) {}
+
+float WeaponState::ConsumePower(SystemPriority Priority, float AvailablePower, float TurnFraction) {
+    if (Damage.IsDestroyed()) {
+        return 0.0f;
+    }
+    return Charge.AddCharge(AvailablePower, TurnFraction);
+}
 
 // Sets default values for this component's properties
 UWeaponsManagerComponent::UWeaponsManagerComponent()
@@ -28,14 +38,14 @@ void UWeaponsManagerComponent::InitializeComponent() {
         switch ((*WeaponModels)[idx].Type) {
         case EWeaponType::WT_Phaser:
             NewEmitter = NewObject<UPhaserEmitterComponent>(GetOwner(), FName(*Name));
-            CHECK(NewEmitter != nullptr);
             break;
         case EWeaponType::WT_Photon:
-            // TODO
+            NewEmitter = NewObject<UPhotonEmitterComponent>(GetOwner(), FName(*Name));
             break;
         default:
             CHECKMSG(false, "Unknown weapon type");
         }
+        CHECK(NewEmitter != nullptr);
         if (NewEmitter != nullptr) {
             NewEmitter->Mesh = Mesh;
             NewEmitter->SocketName = (*WeaponModels)[idx].SocketName;
@@ -64,6 +74,31 @@ bool UWeaponsManagerComponent::FireWeapon(int WeaponIdx, AActor* Target) {
     if (Target == nullptr) return false;
     if (WeaponIdx >= WeaponEmitters.size()) return false;
     if (WeaponEmitters[WeaponIdx] == nullptr) return false;
-    WeaponEmitters[WeaponIdx]->FireAtTarget(Target);
-    return true;
+
+    FWeaponModel& Model = (*WeaponModels)[WeaponIdx];
+
+    if (Model.Damage.IsDestroyed()) return false;
+    if (!Model.Charge.IsCharged()) {
+        DEBUGMSG("Weapon not charged.");
+        return false;
+    }
+
+    if (WeaponEmitters[WeaponIdx]->FireAtTarget((*WeaponModels)[WeaponIdx], Target)) {
+        Model.Charge.Discharge();
+        return true;
+    }
+    return false;
+}
+
+float UWeaponsManagerComponent::ConsumePower(uint8 Priority, float AvailablePower, float TurnFraction) {
+    float RemainingPower = AvailablePower;
+    for (auto& Weapon : *WeaponModels) {
+        if (!Weapon.Damage.IsDestroyed()) {
+            RemainingPower -= Weapon.Charge.AddCharge(RemainingPower, TurnFraction);
+            if (RemainingPower < 0.0f) {
+                RemainingPower = 0.0f;
+            }
+        }
+    }
+    return AvailablePower - RemainingPower;
 }

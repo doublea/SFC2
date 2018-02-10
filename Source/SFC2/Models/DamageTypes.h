@@ -21,7 +21,25 @@ public:
  * 
  */
 UCLASS(const, Blueprintable, BlueprintType)
-class SFC2_API USFCPhotonDamageType : public USFCDamageType
+class SFC2_API USFCNormalPhotonDamageType : public USFCDamageType
+{
+    GENERATED_BODY()
+public:
+    UFUNCTION(BlueprintCallable)
+    virtual float GetDamageAtDistance(float BaseDamage, float Distance) const override { return 8; }
+};
+
+UCLASS(const, Blueprintable, BlueprintType)
+class SFC2_API USFCOverloadPhotonDamageType : public USFCDamageType
+{
+    GENERATED_BODY()
+public:
+    UFUNCTION(BlueprintCallable)
+    virtual float GetDamageAtDistance(float BaseDamage, float Distance) const override { return 16; }
+};
+
+UCLASS(const, Blueprintable, BlueprintType)
+class SFC2_API USFCProximityPhotonDamageType : public USFCDamageType
 {
     GENERATED_BODY()
 public:

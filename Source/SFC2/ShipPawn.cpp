@@ -15,6 +15,8 @@
 #include "Models/DamageTypes.h"
 #include "SFCUtils.h"
 #include "ShieldComponent.h"
+#include "ShipPowerComponent.h"
+#include "ShipMovementComponent.h"
 #include <algorithm>
 
 AShipPawn::AShipPawn()
@@ -39,7 +41,9 @@ AShipPawn::AShipPawn()
 	ShipMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("ShipMesh0"));
     ShipMesh->SetupAttachment(RootComponent);
 	ShipMesh->SetStaticMesh(ConstructorStatics.ShipMesh.Get());	// Set static mesh
-	ShipMesh->SetMaterial(0, ConstructorStatics.UFOMaterial.Get());
+    if (ConstructorStatics.UFOMaterial.Succeeded()) {
+        ShipMesh->SetMaterial(0, ConstructorStatics.UFOMaterial.Get());
+    }
 	ShipMesh->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
 
 	// Don't rotate on controller rotation
@@ -59,12 +63,18 @@ AShipPawn::AShipPawn()
 
     ShieldComponent = CreateDefaultSubobject<UShieldComponent>(TEXT("Shield"));
     ShieldComponent->SetupAttachment(RootComponent);
+
+    MovementComponent = CreateDefaultSubobject<UShipMovementComponent>(TEXT("Movement"));
+
+    ShipPowerComponent = CreateDefaultSubobject<UShipPowerComponent>(TEXT("Power"));
 }
 
 void AShipPawn::BeginPlay() {
     Super::BeginPlay();
     // Initialize all properties from the ShipModel
     // TODO: A lot of stuff
+    MovementComponent->Init(ShipModel.Movement);
+    ShipPowerComponent->Init(ShipModel.PowerSystem, { WeaponsManagerComponent, ShieldComponent, MovementComponent });
 
     if (ShipModel.Mesh != NAME_None) {
         // FIXME: Looks like loading meshes like this returns null?
@@ -89,29 +99,13 @@ float AShipPawn::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent,
 
     // Shield Magic!
     FPointDamageEvent* PointDamageEvent = (FPointDamageEvent*)&DamageEvent;
-    ShieldComponent->ShieldCollision(PointDamageEvent->HitInfo);
+    ShieldComponent->ShieldCollision(PointDamageEvent->ShotDirection);
     return Super::TakeDamage(ActualDamage, DamageEvent, EventInstigator, DamageCauser);
 }
 
 float AShipPawn::GetCurrentTurnRate()
 {
-	return (20.0f / ShipModel.Movement.TurnClass) * (500 / (ShipModel.Movement.CurrentSpeed + 400));
-}
-
-void AShipPawn::SetSpeedFraction(float speedFraction) {
-	CHECK(0.0f <= speedFraction && speedFraction <= 1.0f);
-	ShipModel.Movement.CurrentSpeed = ShipModel.Movement.MaxSpeed * speedFraction;
-}
-
-void AShipPawn::SpeedUp() {
-	ShipModel.Movement.CurrentSpeed = std::min(
-        ShipModel.Movement.MaxSpeed,
-        ShipModel.Movement.CurrentSpeed + ShipModel.Movement.MaxSpeed / 20.0f);
-}
-
-void AShipPawn::SpeedDown() {
-	ShipModel.Movement.CurrentSpeed = std::max(
-        0.0f, ShipModel.Movement.CurrentSpeed - ShipModel.Movement.MaxSpeed / 20.0f);
+	return (20.0f / ShipModel.Movement.TurnClass) * (500 / (MovementComponent->CurrentSpeed + 400));
 }
 
 void AShipPawn::FireAll(AActor* target) {
@@ -120,19 +114,20 @@ void AShipPawn::FireAll(AActor* target) {
     }
 }
 
-FVector SpeedToLocalMove(float CurrentSpeed, float DeltaSeconds) {
-    return FVector(CurrentSpeed * DeltaSeconds, 0.f, 0.f);
+void AShipPawn::SetSpeedFraction(float speedFraction) {
+    MovementComponent->SetSpeedFraction(speedFraction);
+}
+
+void AShipPawn::SpeedUp() {
+    MovementComponent->SpeedUp();
+}
+
+void AShipPawn::SpeedDown() {
+    MovementComponent->SpeedDown();
 }
 
 void AShipPawn::Tick(float DeltaSeconds)
 {
-	const FVector LocalMove = FVector(
-        ShipModel.Movement.CurrentSpeed * DeltaSeconds, 0.f, 0.f);
-
-	// Move plan forwards (with sweep so we stop when we collide with things)
-	AddActorLocalOffset(
-        SpeedToLocalMove(ShipModel.Movement.CurrentSpeed, DeltaSeconds), true);
-
 	FRotator rot = GetActorRotation() - GetControlRotation();
 	rot.Normalize();
 	if (!rot.IsNearlyZero(1.0f)) {
