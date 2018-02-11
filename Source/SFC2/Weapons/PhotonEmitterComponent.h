@@ -26,6 +26,6 @@ public:
     UPhotonEmitterComponent();
 
     UFUNCTION(BlueprintCallable)
-    virtual bool FireAtTarget(FWeaponModel WeaponState, AActor* Target) override;
+    virtual bool FireAtTarget(const FWeaponModel& WeaponState, AActor* Target) override;
 	
 };

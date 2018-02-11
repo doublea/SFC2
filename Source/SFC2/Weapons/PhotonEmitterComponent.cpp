@@ -24,7 +24,7 @@ UPhotonEmitterComponent::UPhotonEmitterComponent() {
     }
 }
 
-bool UPhotonEmitterComponent::FireAtTarget(FWeaponModel WeaponState, AActor* Target) {
+bool UPhotonEmitterComponent::FireAtTarget(const FWeaponModel& WeaponState, AActor* Target) {
     FActorSpawnParameters Params;
     Params.Instigator = Cast<APawn>(GetOwner());
     Params.Owner = GetOwner();

@@ -27,7 +27,7 @@ public:
     FName SocketName;
 
     UFUNCTION(BlueprintCallable)
-    virtual bool FireAtTarget(FWeaponModel WeaponState, AActor* Target) PURE_VIRTUAL(UWeaponEmitterComponent::FireAtTarget, return false;);
+    virtual bool FireAtTarget(const FWeaponModel& WeaponState, AActor* Target) PURE_VIRTUAL(UWeaponEmitterComponent::FireAtTarget, return false;);
 
 protected:
 	// Called when the game starts

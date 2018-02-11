@@ -22,7 +22,7 @@ public:
     class UParticleSystem* PhaserParticle;
 
     UFUNCTION(BlueprintCallable)
-    virtual bool FireAtTarget(FWeaponModel WeaponState, AActor* Target) override;
+    virtual bool FireAtTarget(const FWeaponModel& WeaponState, AActor* Target) override;
 
 protected:
 	// Called when the game starts

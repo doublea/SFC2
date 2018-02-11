@@ -19,7 +19,7 @@ public:
 	// Sets default values for this component's properties
 	UShipPowerComponent();
 
-    void Init(const FPowerSystemModel PowerSystemModel, std::vector<ISFCPoweredSystem*> PowerConsumers);
+    void Init(const FPowerSystemModel PowerSystemModel, std::vector<ISFCPoweredSystem*> System);
 
     UPROPERTY(BlueprintReadOnly)
     float CurrentPower;
@@ -35,5 +35,5 @@ public:
 	
 private:
     // Systems that need to be fed power.
-    std::vector<ISFCPoweredSystem*> Consumers;
+    std::vector<ISFCPoweredSystem*> Systems;
 };

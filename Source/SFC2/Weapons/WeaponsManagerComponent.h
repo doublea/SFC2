@@ -11,14 +11,11 @@
 class WeaponState : public ISFCPowerConsumer {
 public:
 
-    WeaponState(EWeaponType WeaponType, FSystemCharge SystemCharge, FSystemDamage SystemDamage);
+    WeaponState(FWeaponModel* model, UWeaponEmitterComponent* emitter) : Model(model), Emitter(emitter) {};
     virtual float ConsumePower(SystemPriority Priority, float AvailablePower, float TurnFraction) override;
 
-private:
-    EWeaponType Type;
-    FSystemCharge Charge;
-    SystemPriority PowerPriority;
-    FSystemDamage Damage;
+    FWeaponModel* Model;
+    UWeaponEmitterComponent* Emitter;
 };
 
 /**
@@ -36,8 +33,8 @@ public:
     UWeaponsManagerComponent();
 
     TArray<FWeaponModel>* WeaponModels;
-
-    std::vector<UWeaponEmitterComponent*> WeaponEmitters;
+    std::vector<WeaponState*> WeaponStates;
+    std::vector<ISFCPowerConsumer*> PowerConsumers;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
     class UStaticMeshComponent* Mesh;

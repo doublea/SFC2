@@ -47,7 +47,7 @@ void UPhaserEmitterComponent::BeginPlay()
     PhaserParticleSystem->SetTemplate(PhaserParticle);
 }
 
-bool UPhaserEmitterComponent::FireAtTarget(FWeaponModel WeaponState, AActor* Target) {
+bool UPhaserEmitterComponent::FireAtTarget(const FWeaponModel& WeaponState, AActor* Target) {
     if (Target == nullptr) return false;
     CurrentTarget = Target;
     CHECK(PhaserParticleSystem != nullptr);

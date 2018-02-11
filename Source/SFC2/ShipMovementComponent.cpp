@@ -40,7 +40,7 @@ std::vector<ISFCPowerConsumer*> UShipMovementComponent::GetPowerConsumers() {
 
 float UShipMovementComponent::ConsumePower(uint8 Priority, float AvailablePower, float TurnFraction) {
     // Only draw power at PRIORITY_MOVEMENT.
-    if (Priority != ISFCPoweredSystem::PRIORITY_MOVEMENT) return 0.0f;
+    if (Priority != PRIORITY_MOVEMENT) return 0.0f;
 
     float ConsumedPower = CurrentSpeed * Model.MovementPowerCost * TurnFraction;
     if (ConsumedPower > AvailablePower) {

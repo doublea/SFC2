@@ -17,9 +17,9 @@ UShipPowerComponent::UShipPowerComponent()
     CurrentExcessPower = 0.0f;
 }
 
-void UShipPowerComponent::Init(const FPowerSystemModel Model, std::vector<ISFCPoweredSystem*> PowerConsumers) {
+void UShipPowerComponent::Init(const FPowerSystemModel Model, std::vector<ISFCPoweredSystem*> PoweredSystems) {
     PowerSystemModel = Model;
-    Consumers = PowerConsumers;
+    Systems = PoweredSystems;
     CurrentPower = PowerSystemModel.MaxPower;
 }
 
@@ -32,11 +32,15 @@ void UShipPowerComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
     // This all needs rethinking.
     float TurnFraction = DeltaTime / GameState->GameSpeed;
     float AvailablePower = CurrentPower * TurnFraction;
+    // TODO: Dynamically sorted priorities.
     for (uint8 Priority = 0; Priority <= ISFCPoweredSystem::PRIORITY_LAST; Priority++) {
-        for (ISFCPoweredSystem* System : Consumers) {
-            AvailablePower -= System->ConsumePower(Priority, AvailablePower, TurnFraction);
-            if (AvailablePower < 0.0f) {
-                AvailablePower = 0.0f;
+        for (ISFCPoweredSystem* system : Systems) {
+            for (ISFCPowerConsumer* consumer : system->GetPowerConsumers()) {
+                AvailablePower -= consumer->ConsumePower(Priority, AvailablePower, TurnFraction);
+                if (AvailablePower < 0.0f) {
+                    // This should never happen?
+                    AvailablePower = 0.0f;
+                }
             }
         }
     }
